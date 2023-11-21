@@ -48,7 +48,6 @@ class Knight:
                         return True
         return False
 
-
 #bishop class, checks if piece moved diagonally
 class Bishop:
     def __init__(self, color, row, col):
