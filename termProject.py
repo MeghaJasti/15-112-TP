@@ -105,52 +105,93 @@ def onAppStart(app):
     #start game
     reset(app)
 
+#restart the game
 def reset(app):
     app.currentPlayer = 1
     #white pawns
-    pawnw1 = Pawn("white", 6, 0)
-    pawnw2 = Pawn("white", 6, 1)
-    pawnw3 = Pawn("white", 6, 2)
-    pawnw4 = Pawn("white", 6, 3)
-    pawnw5 = Pawn("white", 6, 4)
-    pawnw6 = Pawn("white", 6, 5)
-    pawnw7 = Pawn("white", 6, 6)
-    pawnw8 = Pawn("white", 6, 7)
+    app.pawnw1 = Pawn("white", 6, 0)
+    app.pawnw2 = Pawn("white", 6, 1)
+    app.pawnw3 = Pawn("white", 6, 2)
+    app.pawnw4 = Pawn("white", 6, 3)
+    app.pawnw5 = Pawn("white", 6, 4)
+    app.pawnw6 = Pawn("white", 6, 5)
+    app.pawnw7 = Pawn("white", 6, 6)
+    app.pawnw8 = Pawn("white", 6, 7)
     #other white pieces
-    rookw1 = Rook("white", 7, 0)
-    knightw1 = Knight("white", 7, 1)
-    bishopw1 = Bishop("white", 7, 2)
-    queenw = Queen("white", 7, 3)
-    kingw = King("white", 7, 4)
-    bishopw2 = Bishop("white", 7, 5)
-    knightw2 = Knight("white", 7, 6)
-    rookw2 = Rook("white", 7, 7)
+    app.rookw1 = Rook("white", 7, 0)
+    app.knightw1 = Knight("white", 7, 1)
+    app.bishopw1 = Bishop("white", 7, 2)
+    app.queenw = Queen("white", 7, 3)
+    app.kingw = King("white", 7, 4)
+    app.bishopw2 = Bishop("white", 7, 5)
+    app.knightw2 = Knight("white", 7, 6)
+    app.rookw2 = Rook("white", 7, 7)
 
     #black pawns
-    pawnb1 = Pawn("black", 1, 0)
-    pawnb2 = Pawn("black", 1, 1)
-    pawnb3 = Pawn("black", 1, 2)
-    pawnb4 = Pawn("black", 1, 3)
-    pawnb5 = Pawn("black", 1, 4)
-    pawnb6 = Pawn("black", 1, 5)
-    pawnb7 = Pawn("black", 1, 6)
-    pawnb8 = Pawn("black", 1, 7)
+    app.pawnb1 = Pawn("black", 1, 0)
+    app.pawnb2 = Pawn("black", 1, 1)
+    app.pawnb3 = Pawn("black", 1, 2)
+    app.pawnb4 = Pawn("black", 1, 3)
+    app.pawnb5 = Pawn("black", 1, 4)
+    app.pawnb6 = Pawn("black", 1, 5)
+    app.pawnb7 = Pawn("black", 1, 6)
+    app.pawnb8 = Pawn("black", 1, 7)
     #other black pieces
-    rookb1 = Rook("black", 0, 0)
-    knightb1 = Knight("black", 0, 1)
-    bishopb1 = Bishop("black", 0, 2)
-    queenb = Queen("black", 0, 3)
-    kingb = King("black", 0, 4)
-    bishopb2 = Bishop("black", 0, 5)
-    knightb2 = Knight("black", 0, 6)
-    rookb2 = Rook("black", 0, 7)
+    app.rookb1 = Rook("black", 0, 0)
+    app.knightb1 = Knight("black", 0, 1)
+    app.bishopb1 = Bishop("black", 0, 2)
+    app.queenb = Queen("black", 0, 3)
+    app.kingb = King("black", 0, 4)
+    app.bishopb2 = Bishop("black", 0, 5)
+    app.knightb2 = Knight("black", 0, 6)
+    app.rookb2 = Rook("black", 0, 7)
 
+    #initialize board
+    app.board = [[app.rookb1, app.knightb1, app.bishopb2, app.queenb, app.kingb, app.bishopb2, app.knightb2, app.rookb2],
+                 [app.pawnb1, app.pawnb2, app.pawnb3, app.pawnb4, app.pawnb5, app.pawnb6, app.pawnb7, app.pawnb8], 
+                 ["-", "-", "-", "-", "-", "-", "-", "-"], 
+                 ["-", "-", "-", "-", "-", "-", "-", "-"], 
+                 ["-", "-", "-", "-", "-", "-", "-", "-"], 
+                 ["-", "-", "-", "-", "-", "-", "-", "-"], 
+                 [app.pawnw1, app.pawnw2, app.pawnw3, app.pawnw4, app.pawnw5, app.pawnw6, app.pawnw7, app.pawnw8], 
+                 [app.rookw1, app.knightw1, app.bishopw2, app.queenw, app.kingw, app.bishopw2, app.knightw2, app.rookw2]
+    ]
+
+#reset game if "r" is pressed
 def onKeyPress(app, key):
     if key == "r":
         reset()
 
-def redrawAll(app):
+def onMousePress(app, mouseX, mouseY):
     pass
+
+#draw the board
+def drawBoard(app):
+    height = 400
+    cellSize = height/8
+    color = "silver"
+    for row in range(8):
+        for col in range(8):
+            #draw grid
+            drawRect(50 + cellSize*row, 50 + cellSize*col, cellSize, cellSize, fill = color, border='black', borderWidth = 2)
+            #switch colors
+            if color == "silver": color = "dimGray"
+            else: color = "silver"
+        if color == "silver": color = "dimGray"
+        else: color = "silver"
+    #draw border
+    drawRect(50, 50, 400, 400, fill = None, border = 'black', borderWidth = 4)
+    
+
+def redrawAll(app):
+    #current player
+    if app.currentPlayer == 1:
+        currentPlayer = "White"
+    else:
+        currentPlayer = "Black"
+    drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
+    #draw board
+    drawBoard(app)
 
 def main():
     runApp()
