@@ -108,6 +108,8 @@ def onAppStart(app):
 #restart the game
 def reset(app):
     app.currentPlayer = 1
+    app.beginMove = None
+    app.endMove = None
     #white pawns
     app.pawnw1 = Pawn("white", 6, 0)
     app.pawnw2 = Pawn("white", 6, 1)
@@ -163,7 +165,8 @@ def onKeyPress(app, key):
         reset()
 
 def onMousePress(app, mouseX, mouseY):
-    pass
+    row = (mouseX - 50)//50
+    col = (mouseY - 50)//50
 
 #draw the board
 def drawBoard(app):
@@ -182,7 +185,6 @@ def drawBoard(app):
     #draw border
     drawRect(50, 50, 400, 400, fill = None, border = 'black', borderWidth = 4)
     
-
 def redrawAll(app):
     #current player
     if app.currentPlayer == 1:
