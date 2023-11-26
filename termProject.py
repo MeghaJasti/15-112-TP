@@ -165,8 +165,26 @@ def onKeyPress(app, key):
         reset()
 
 def onMousePress(app, mouseX, mouseY):
-    row = (mouseX - 50)//50
-    col = (mouseY - 50)//50
+    #find location
+    row = (mouseY - 50)//50
+    col = (mouseX - 50)//50
+    #determine if click was the beginning or end of a move
+    if app.beginMove == None:
+        app.beginMove = [row, col]
+    else: 
+        app.endMove = [row, col]
+    #find piece
+    piece = app.board[app.beginMove[0]][app.beginMove[1]]
+    #move piece 
+    if piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1]):
+        piece.row = app.endMove[0]
+        piece.col = app.endMove[1]
+        app.board[app.beginMove[0]][app.endMove[1]] = "-"
+        app.board[app.endMove[0]][app.endMove[1]] = piece
+        print(app.board[app.beginMove[0]])
+        print(app.board[app.endMove[0]])
+        app.beginMove = None
+        app.endMove = None
 
 #draw the board
 def drawBoard(app):
@@ -175,8 +193,15 @@ def drawBoard(app):
     color = "silver"
     for row in range(8):
         for col in range(8):
+            #change border color based on selection
+            if app.beginMove == [row, col]:
+                border = "green"
+            elif app.endMove == [row, col]:
+                border = "red"
+            else:
+                border = "black"
             #draw grid
-            drawRect(50 + cellSize*row, 50 + cellSize*col, cellSize, cellSize, fill = color, border='black', borderWidth = 2)
+            drawRect(50 + cellSize*col, 50 + cellSize*row, cellSize, cellSize, fill = color, border = border, borderWidth = 2)
             #switch colors
             if color == "silver": color = "dimGray"
             else: color = "silver"
@@ -192,8 +217,8 @@ def redrawAll(app):
     else:
         currentPlayer = "Black"
     drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
+    drawLabel(app.message, 250, 475, size = 20, fill = "red")
     #draw board
-    drawBoard(app)
 
 def main():
     runApp()
