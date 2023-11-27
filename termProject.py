@@ -7,6 +7,11 @@ class Pawn:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white pawn.png"
+        else:
+            self.image = "chess pieces/black pawn.png"
 
     def validMove(self, newRow, newCol):
         if self.col != newCol:
@@ -23,6 +28,11 @@ class Rook:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white rook.png"
+        else:
+            self.image = "chess pieces/black rook.png"
 
     def validMove(self, newRow, newCol):
         if self.row == newRow and self.col != newCol:
@@ -37,6 +47,11 @@ class Knight:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white knight.png"
+        else:
+            self.image = "chess pieces/black knight.png"
     
     def validMove(self, newRow, newCol):
         for drow in [-2, 2]:
@@ -55,6 +70,11 @@ class Bishop:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white bishop.png"
+        else:
+            self.image = "chess pieces/black bishop.png"
 
     def validMove(self, newRow, newCol):
         drow = abs(newRow - self.row)
@@ -69,6 +89,11 @@ class King:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white king.png"
+        else:
+            self.image = "chess pieces/black king.png"
 
     def validMove(self, newRow, newCol):
         for drow in [-1, 0, 1]:
@@ -84,6 +109,11 @@ class Queen:
         self.color = color
         self.row = row
         self.col = col
+        #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
+        if color == "white":
+            self.image = "chess pieces/white queen.png"
+        else:
+            self.image = "chess pieces/black queen.png"
 
     def validMove(self, newRow, newCol):
         if self.row == newRow and self.col != newCol:
@@ -179,7 +209,7 @@ def onMousePress(app, mouseX, mouseY):
     if piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1]):
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
-        app.board[app.beginMove[0]][app.endMove[1]] = "-"
+        app.board[app.beginMove[0]][app.beginMove[1]] = "-"
         app.board[app.endMove[0]][app.endMove[1]] = piece
         print(app.board[app.beginMove[0]])
         print(app.board[app.endMove[0]])
@@ -209,6 +239,16 @@ def drawBoard(app):
         else: color = "silver"
     #draw border
     drawRect(50, 50, 400, 400, fill = None, border = 'black', borderWidth = 4)
+
+#draw pieces
+def drawPieces(app):
+    height = 400
+    cellSize = height/8
+    for row in range(8):
+        for col in range(8):
+            piece = app.board[row][col]
+            if piece != "-":
+                drawImage(piece.image, 50 + cellSize*col, 50 + cellSize*row, width = cellSize, height = cellSize)
     
 def redrawAll(app):
     #current player
@@ -217,8 +257,9 @@ def redrawAll(app):
     else:
         currentPlayer = "Black"
     drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
-    drawLabel(app.message, 250, 475, size = 20, fill = "red")
-    #draw board
+    #draw board and pieces
+    drawBoard(app)
+    drawPieces(app)
 
 def main():
     runApp()
