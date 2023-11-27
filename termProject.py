@@ -140,6 +140,7 @@ def reset(app):
     app.currentPlayer = 1
     app.beginMove = None
     app.endMove = None
+    app.message = None
     #white pawns
     app.pawnw1 = Pawn("white", 6, 0)
     app.pawnw2 = Pawn("white", 6, 1)
@@ -201,20 +202,35 @@ def onMousePress(app, mouseX, mouseY):
     #determine if click was the beginning or end of a move
     if app.beginMove == None:
         app.beginMove = [row, col]
+        app.message = None
+    elif app.beginMove == [row, col]:
+        app.beginMove = None
+        app.endMove = None
+        app.message = None
     else: 
         app.endMove = [row, col]
-    #find piece
+        makeMove(app)
+    
+def makeMove(app):
+    #find piece and potential captured piece
     piece = app.board[app.beginMove[0]][app.beginMove[1]]
-    #move piece 
-    if piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1]):
+    capturePiece = app.board[app.endMove[0]][app.endMove[1]]
+    #make move if valid
+    if capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
+        app.message = "Invalid Move!"
+    elif piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1]): #valid move
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
         app.board[app.endMove[0]][app.endMove[1]] = piece
-        print(app.board[app.beginMove[0]])
-        print(app.board[app.endMove[0]])
         app.beginMove = None
         app.endMove = None
+        if piece.color == "white":
+            app.currentPlayer = 2
+        else:
+            app.currentPlayer = 1
+    elif app.endMove != None and not piece.validMove(app.endMove[0], app.endMove[1]): #invalid move
+        app.message = "Invalid Move!"
 
 #draw the board
 def drawBoard(app):
@@ -249,17 +265,19 @@ def drawPieces(app):
             piece = app.board[row][col]
             if piece != "-":
                 drawImage(piece.image, 50 + cellSize*col, 50 + cellSize*row, width = cellSize, height = cellSize)
-    
+
 def redrawAll(app):
     #current player
     if app.currentPlayer == 1:
         currentPlayer = "White"
     else:
         currentPlayer = "Black"
-    drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
-    #draw board and pieces
+    #draw board, pieces, and text
     drawBoard(app)
     drawPieces(app)
+    if app.message != None:
+        drawLabel(app.message, 250, 475, fill = "red", size = 20)
+    drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
 
 def main():
     runApp()
