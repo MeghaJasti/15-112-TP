@@ -45,17 +45,17 @@ class Rook:
     def noObstacles(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
             if self.col < newCol:
-                lower = self.col
+                lower = self.col + 1
                 upper = newCol
             else:
                 upper = self.col
                 lower = newCol
-            for col in range(self.col, newCol):
+            for col in range(lower, upper):
                 if board[self.row][col] != "-":
                     return False
         elif self.row != newRow and self.col == newCol:
             if self.row < newRow:
-                lower = self.row
+                lower = self.row + 1
                 upper = newRow
             else:
                 upper = self.row
@@ -141,14 +141,40 @@ class Queen:
 
     def validMove(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
-            return True
+            return self.noObstaclesLine(newRow, newCol, board)
         if self.row != newRow and self.col == newCol:
-            return True
+            return self.noObstaclesLine(newRow, newCol, board)
         drow = abs(newRow - self.row)
         dcol = abs(newCol - self.col)
         if drow == dcol: 
-            return True
+            return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
+    
+    def noObstaclesLine(self, newRow, newCol, board):
+        if self.row == newRow and self.col != newCol:
+            if self.col < newCol:
+                lower = self.col + 1
+                upper = newCol
+            else:
+                upper = self.col
+                lower = newCol
+            for col in range(lower, upper):
+                if board[self.row][col] != "-":
+                    return False
+        elif self.row != newRow and self.col == newCol:
+            if self.row < newRow:
+                lower = self.row + 1
+                upper = newRow
+            else:
+                upper = self.row
+                lower = newRow
+            for row in range(lower, upper):
+                if board[row][self.col] != "-":
+                    return False
+        return True
+    
+    def noObstaclesDiagonal(self, newRow, newCol, board):
+        pass
     
 #-----graphics-----#
 
