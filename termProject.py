@@ -3,17 +3,18 @@ from cmu_graphics import *
 #-----all piece classes-----#
 #pawn class, checks if piece moved up/down one
 class Pawn:
-    def __init__(self, color, row, col):
+    def __init__(self, color, row, col, turn):
         self.color = color
         self.row = row
         self.col = col
+        self.turn = turn
         #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
         if color == "white":
             self.image = "chess pieces/white pawn.png"
         else:
             self.image = "chess pieces/black pawn.png"
 
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         if self.col != newCol:
             return False
         if self.color == "white":
@@ -34,12 +35,35 @@ class Rook:
         else:
             self.image = "chess pieces/black rook.png"
 
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
-            return True
+            return self.noObstacles(newRow, newCol, board)
         if self.row != newRow and self.col == newCol:
-            return True
+            return self.noObstacles(newRow, newCol, board)
         return False
+    
+    def noObstacles(self, newRow, newCol, board):
+        if self.row == newRow and self.col != newCol:
+            if self.col < newCol:
+                lower = self.col
+                upper = newCol
+            else:
+                upper = self.col
+                lower = newCol
+            for col in range(self.col, newCol):
+                if board[self.row][col] != "-":
+                    return False
+        elif self.row != newRow and self.col == newCol:
+            if self.row < newRow:
+                lower = self.row
+                upper = newRow
+            else:
+                upper = self.row
+                lower = newRow
+            for row in range(lower, upper):
+                if board[row][self.col] != "-":
+                    return False
+        return True
 
 #knight class, checks if piece moved in an L
 class Knight:
@@ -53,7 +77,7 @@ class Knight:
         else:
             self.image = "chess pieces/black knight.png"
     
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         for drow in [-2, 2]:
             for dcol in [-1, 1]:
                 if self.row + drow == newRow and self.col + dcol == newCol:
@@ -76,7 +100,7 @@ class Bishop:
         else:
             self.image = "chess pieces/black bishop.png"
 
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         drow = abs(newRow - self.row)
         dcol = abs(newCol - self.col)
         if drow == dcol: 
@@ -95,7 +119,7 @@ class King:
         else:
             self.image = "chess pieces/black king.png"
 
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         for drow in [-1, 0, 1]:
             for dcol in [-1, 0, 1]:
                 if (drow, dcol) != (0, 0):
@@ -115,7 +139,7 @@ class Queen:
         else:
             self.image = "chess pieces/black queen.png"
 
-    def validMove(self, newRow, newCol):
+    def validMove(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
             return True
         if self.row != newRow and self.col == newCol:
@@ -137,19 +161,19 @@ def onAppStart(app):
 
 #restart the game
 def reset(app):
-    app.currentPlayer = 1
+    app.currentPlayer = "White"
     app.beginMove = None
     app.endMove = None
     app.message = None
     #white pawns
-    app.pawnw1 = Pawn("white", 6, 0)
-    app.pawnw2 = Pawn("white", 6, 1)
-    app.pawnw3 = Pawn("white", 6, 2)
-    app.pawnw4 = Pawn("white", 6, 3)
-    app.pawnw5 = Pawn("white", 6, 4)
-    app.pawnw6 = Pawn("white", 6, 5)
-    app.pawnw7 = Pawn("white", 6, 6)
-    app.pawnw8 = Pawn("white", 6, 7)
+    app.pawnw1 = Pawn("white", 6, 0, 0)
+    app.pawnw2 = Pawn("white", 6, 1, 0)
+    app.pawnw3 = Pawn("white", 6, 2, 0)
+    app.pawnw4 = Pawn("white", 6, 3, 0)
+    app.pawnw5 = Pawn("white", 6, 4, 0)
+    app.pawnw6 = Pawn("white", 6, 5, 0)
+    app.pawnw7 = Pawn("white", 6, 6, 0)
+    app.pawnw8 = Pawn("white", 6, 7, 0)
     #other white pieces
     app.rookw1 = Rook("white", 7, 0)
     app.knightw1 = Knight("white", 7, 1)
@@ -161,14 +185,14 @@ def reset(app):
     app.rookw2 = Rook("white", 7, 7)
 
     #black pawns
-    app.pawnb1 = Pawn("black", 1, 0)
-    app.pawnb2 = Pawn("black", 1, 1)
-    app.pawnb3 = Pawn("black", 1, 2)
-    app.pawnb4 = Pawn("black", 1, 3)
-    app.pawnb5 = Pawn("black", 1, 4)
-    app.pawnb6 = Pawn("black", 1, 5)
-    app.pawnb7 = Pawn("black", 1, 6)
-    app.pawnb8 = Pawn("black", 1, 7)
+    app.pawnb1 = Pawn("black", 1, 0, 0)
+    app.pawnb2 = Pawn("black", 1, 1, 0)
+    app.pawnb3 = Pawn("black", 1, 2, 0)
+    app.pawnb4 = Pawn("black", 1, 3, 0)
+    app.pawnb5 = Pawn("black", 1, 4, 0)
+    app.pawnb6 = Pawn("black", 1, 5, 0)
+    app.pawnb7 = Pawn("black", 1, 6, 0)
+    app.pawnb8 = Pawn("black", 1, 7, 0)
     #other black pieces
     app.rookb1 = Rook("black", 0, 0)
     app.knightb1 = Knight("black", 0, 1)
@@ -218,7 +242,9 @@ def makeMove(app):
     #make move if valid
     if capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
         app.message = "Invalid Move!"
-    elif piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1]): #valid move
+    elif piece.color != app.currentPlayer.lower():
+        app.message = "Wrong Player Move!"
+    elif piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1], app.board): #valid move
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
@@ -226,10 +252,10 @@ def makeMove(app):
         app.beginMove = None
         app.endMove = None
         if piece.color == "white":
-            app.currentPlayer = 2
+            app.currentPlayer = "Black"
         else:
-            app.currentPlayer = 1
-    elif app.endMove != None and not piece.validMove(app.endMove[0], app.endMove[1]): #invalid move
+            app.currentPlayer = "White"
+    elif app.endMove != None and not piece.validMove(app.endMove[0], app.endMove[1], app.board): #invalid move
         app.message = "Invalid Move!"
 
 #draw the board
@@ -267,17 +293,12 @@ def drawPieces(app):
                 drawImage(piece.image, 50 + cellSize*col, 50 + cellSize*row, width = cellSize, height = cellSize)
 
 def redrawAll(app):
-    #current player
-    if app.currentPlayer == 1:
-        currentPlayer = "White"
-    else:
-        currentPlayer = "Black"
     #draw board, pieces, and text
     drawBoard(app)
     drawPieces(app)
     if app.message != None:
         drawLabel(app.message, 250, 475, fill = "red", size = 20)
-    drawLabel("Current Player: " + currentPlayer, 250, 25, size = 20)
+    drawLabel("Current Player: " + app.currentPlayer, 250, 25, size = 20)
 
 def main():
     runApp()
