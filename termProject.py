@@ -37,12 +37,12 @@ class Rook:
 
     def validMove(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
-            return self.noObstacles(newRow, newCol, board)
+            return self.noObstaclesLine(newRow, newCol, board)
         if self.row != newRow and self.col == newCol:
-            return self.noObstacles(newRow, newCol, board)
+            return self.noObstaclesLine(newRow, newCol, board)
         return False
     
-    def noObstacles(self, newRow, newCol, board):
+    def noObstaclesLine(self, newRow, newCol, board):
         if self.row == newRow and self.col != newCol:
             if self.col < newCol:
                 lower = self.col + 1
@@ -104,8 +104,23 @@ class Bishop:
         drow = abs(newRow - self.row)
         dcol = abs(newCol - self.col)
         if drow == dcol: 
-            return True
+            return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
+    
+    def noObstaclesDiagonal(self, newRow, newCol, board):
+        if self.row < newRow:
+            lowerRow = self.row
+        else:
+            lowerRow = newRow
+        if self.col < newCol:
+            lowerCol = self.col
+        else:
+            lowerCol = newCol
+        difference = abs(newRow - self.row)
+        for dif in range(1, difference):
+            if board[lowerRow + dif][lowerCol + dif] != "-":
+                return False
+        return True
 
 #king class, checks if piece moved one square
 class King:
@@ -174,7 +189,19 @@ class Queen:
         return True
     
     def noObstaclesDiagonal(self, newRow, newCol, board):
-        pass
+        if self.row < newRow:
+            lowerRow = self.row
+        else:
+            lowerRow = newRow
+        if self.col < newCol:
+            lowerCol = self.col
+        else:
+            lowerCol = newCol
+        difference = abs(newRow - self.row)
+        for dif in range(1, difference):
+            if board[lowerRow + dif][lowerCol + dif] != "-":
+                return False
+        return True
     
 #-----graphics-----#
 
@@ -230,20 +257,20 @@ def reset(app):
     app.rookb2 = Rook("black", 0, 7)
 
     #initialize board
-    app.board = [[app.rookb1, app.knightb1, app.bishopb2, app.queenb, app.kingb, app.bishopb2, app.knightb2, app.rookb2],
+    app.board = [[app.rookb1, app.knightb1, app.bishopb1, app.queenb, app.kingb, app.bishopb2, app.knightb2, app.rookb2],
                  [app.pawnb1, app.pawnb2, app.pawnb3, app.pawnb4, app.pawnb5, app.pawnb6, app.pawnb7, app.pawnb8], 
                  ["-", "-", "-", "-", "-", "-", "-", "-"], 
                  ["-", "-", "-", "-", "-", "-", "-", "-"], 
                  ["-", "-", "-", "-", "-", "-", "-", "-"], 
                  ["-", "-", "-", "-", "-", "-", "-", "-"], 
                  [app.pawnw1, app.pawnw2, app.pawnw3, app.pawnw4, app.pawnw5, app.pawnw6, app.pawnw7, app.pawnw8], 
-                 [app.rookw1, app.knightw1, app.bishopw2, app.queenw, app.kingw, app.bishopw2, app.knightw2, app.rookw2]
+                 [app.rookw1, app.knightw1, app.bishopw1, app.queenw, app.kingw, app.bishopw2, app.knightw2, app.rookw2]
     ]
 
 #reset game if "r" is pressed
 def onKeyPress(app, key):
     if key == "r":
-        reset()
+        reset(app)
 
 def onMousePress(app, mouseX, mouseY):
     #find location
@@ -265,12 +292,13 @@ def makeMove(app):
     #find piece and potential captured piece
     piece = app.board[app.beginMove[0]][app.beginMove[1]]
     capturePiece = app.board[app.endMove[0]][app.endMove[1]]
+    valid = piece.validMove(app.endMove[0], app.endMove[1], app.board)
     #make move if valid
     if capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
         app.message = "Invalid Move!"
-    elif piece.color != app.currentPlayer.lower():
+    elif piece.color != app.currentPlayer.lower(): #wrong player
         app.message = "Wrong Player Move!"
-    elif piece != "-" and app.endMove != None and piece.validMove(app.endMove[0], app.endMove[1], app.board): #valid move
+    elif piece != "-" and valid: #valid move
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
@@ -281,7 +309,7 @@ def makeMove(app):
             app.currentPlayer = "Black"
         else:
             app.currentPlayer = "White"
-    elif app.endMove != None and not piece.validMove(app.endMove[0], app.endMove[1], app.board): #invalid move
+    elif not valid: #invalid move
         app.message = "Invalid Move!"
 
 #draw the board
