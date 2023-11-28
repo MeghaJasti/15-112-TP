@@ -16,7 +16,15 @@ class Pawn:
 
     def validMove(self, newRow, newCol, board):
         if self.col != newCol:
+            print("horizontal")
             return False
+        if self.turn == 0:
+            if self.color == "white" and (self.row - 1 == newRow or self.row - 2 == newRow):
+                self.turn += 1
+                return True
+            if self.color == "black" and (self.row + 1 == newRow or self.row + 2 == newRow):
+                self.turn += 1
+                return True
         if self.color == "white":
             return self.row - 1 == newRow
         if self.color == "black":
@@ -49,7 +57,7 @@ class Rook:
                 upper = newCol
             else:
                 upper = self.col
-                lower = newCol
+                lower = newCol + 1
             for col in range(lower, upper):
                 if board[self.row][col] != "-":
                     return False
@@ -59,7 +67,7 @@ class Rook:
                 upper = newRow
             else:
                 upper = self.row
-                lower = newRow
+                lower = newRow + 1
             for row in range(lower, upper):
                 if board[row][self.col] != "-":
                     return False
@@ -172,7 +180,7 @@ class Queen:
                 upper = newCol
             else:
                 upper = self.col
-                lower = newCol
+                lower = newCol + 1
             for col in range(lower, upper):
                 if board[self.row][col] != "-":
                     return False
@@ -182,7 +190,7 @@ class Queen:
                 upper = newRow
             else:
                 upper = self.row
-                lower = newRow
+                lower = newRow + 1
             for row in range(lower, upper):
                 if board[row][self.col] != "-":
                     return False
@@ -294,11 +302,14 @@ def makeMove(app):
     capturePiece = app.board[app.endMove[0]][app.endMove[1]]
     valid = piece.validMove(app.endMove[0], app.endMove[1], app.board)
     #make move if valid
-    if capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
-        app.message = "Invalid Move!"
-    elif piece.color != app.currentPlayer.lower(): #wrong player
+    if piece.color != app.currentPlayer.lower(): #wrong player
         app.message = "Wrong Player Move!"
+    elif capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
+        print("same color")
+        app.message = "Invalid Move!"
     elif piece != "-" and valid: #valid move
+        print("valid move")
+        app.message = ""
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
@@ -310,6 +321,7 @@ def makeMove(app):
         else:
             app.currentPlayer = "White"
     elif not valid: #invalid move
+        print("not valid move")
         app.message = "Invalid Move!"
 
 #draw the board
