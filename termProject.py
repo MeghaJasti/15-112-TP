@@ -109,24 +109,24 @@ class Bishop:
             self.image = "chess pieces/black bishop.png"
 
     def validMove(self, newRow, newCol, board):
-        drow = abs(newRow - self.row)
-        dcol = abs(newCol - self.col)
-        if drow == dcol: 
+        dRow = abs(newRow - self.row)
+        dCol = abs(newCol - self.col)
+        if dRow == dCol: 
             return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
     
     def noObstaclesDiagonal(self, newRow, newCol, board):
-        if self.row < newRow:
-            lowerRow = self.row
+        if newRow - self.row < 0:
+            dRow = -1
         else:
-            lowerRow = newRow
-        if self.col < newCol:
-            lowerCol = self.col
+            dRow = 1
+        if newCol - self.col < 0:
+            dCol = -1
         else:
-            lowerCol = newCol
-        difference = abs(newRow - self.row)
-        for dif in range(1, difference):
-            if board[lowerRow + dif][lowerCol + dif] != "-":
+            dCol = 1
+        for dif in range(1, abs(newRow - self.row)):
+            print(self.row + dRow * dif, self.col + dCol * dif)
+            if board[self.row + dRow * dif][self.col + dCol * dif] != "-":
                 return False
         return True
 
@@ -197,17 +197,17 @@ class Queen:
         return True
     
     def noObstaclesDiagonal(self, newRow, newCol, board):
-        if self.row < newRow:
-            lowerRow = self.row
+        if newRow - self.row < 0:
+            dRow = -1
         else:
-            lowerRow = newRow
-        if self.col < newCol:
-            lowerCol = self.col
+            dRow = 1
+        if newCol - self.col < 0:
+            dCol = -1
         else:
-            lowerCol = newCol
-        difference = abs(newRow - self.row)
-        for dif in range(1, difference):
-            if board[lowerRow + dif][lowerCol + dif] != "-":
+            dCol = 1
+        for dif in range(1, abs(newRow - self.row)):
+            print(self.row + dRow * dif, self.col + dCol * dif)
+            if board[self.row + dRow * dif][self.col + dCol * dif] != "-":
                 return False
         return True
     
