@@ -51,6 +51,17 @@ class Pawn:
             return self.row == 0
         else:
             return self.row == 7
+        
+    def check(self, board):
+        if self.color == "white":
+            dRow = -1
+        else:
+            dRow = 1
+        for dCol in [-1, 1]:
+            capturedPiece = board[self.row + dRow][self.col + dCol]
+            if isinstance(capturedPiece, King) and self.validCapture(self.row + dRow, self.col + dCol, board):
+                return True
+        return False
 
 #rook class, checks if piece moved in a line
 class Rook:
@@ -93,6 +104,19 @@ class Rook:
                 if board[row][self.col] != "-":
                     return False
         return True
+    
+    def check(self, board):
+        for row in range(7):
+            if self.validMove(row, self.col, board):
+                piece = board[row][self.col]
+                if isinstance(piece, King) and piece.color != self.color:
+                    return True
+        for col in range(7):
+            if self.validMove(self.row, col, board):
+                piece = board[self.row][col]
+                if isinstance(piece, King) and piece.color != self.color:
+                    return True
+        return False
 
 #knight class, checks if piece moved in an L
 class Knight:
@@ -107,13 +131,32 @@ class Knight:
             self.image = "chess pieces/black knight.png"
     
     def validMove(self, newRow, newCol, board):
-        for drow in [-2, 2]:
-            for dcol in [-1, 1]:
-                if self.row + drow == newRow and self.col + dcol == newCol:
+        for dRow in [-2, 2]:
+            for dCol in [-1, 1]:
+                if self.row + dRow == newRow and self.col + dCol == newCol:
                     return True
-        for dcol in [-2, 2]:
-            for drow in [-1, 1]:
-                if self.row + drow == newRow and self.col + dcol == newCol:
+        for dCol in [-2, 2]:
+            for dRow in [-1, 1]:
+                if self.row + dRow == newRow and self.col + dCol == newCol:
+                        return True
+        return False
+    
+    def check(self, board):
+        for dRow in [-2, 2]:
+            for dCol in [-1, -1]:
+                newRow = self.row + dRow
+                newCol = self.col + dCol
+                if 0 <= newRow <= 7 and 0 <= newCol <= 7:
+                    piece = board[newRow][newCol]
+                    if isinstance(piece, King) and piece.color != self.color:
+                        return True
+        for dCol in [-2, 2]:
+            for dRow in [-1, -1]:
+                newRow = self.row + dRow
+                newCol = self.col + dCol
+                if 0 <= newRow <= 7 and 0 <= newCol <= 7:
+                    piece = board[newRow][newCol]
+                    if isinstance(piece, King) and piece.color != self.color:
                         return True
         return False
 
@@ -150,6 +193,9 @@ class Bishop:
             if board[self.row + dRow * dif][self.col + dCol * dif] != "-":
                 return False
         return True
+    
+    def check(self, board):
+        pass
 
 #king class, checks if piece moved one square
 class King:
@@ -169,6 +215,14 @@ class King:
                 if (drow, dcol) != (0, 0):
                     if self.row + drow == newRow and self.col + dcol == newCol:
                         return True
+        return False
+    
+    def check(self, board):
+        for row in range(7):
+            for col in range(7):
+                piece = board[row][col]
+                if piece != "-" and piece.color != self.color and piece.validMove(self.row, self.col, board):
+                    return True
         return False
 
 #queen class, checks if piece moved in a line or diagonally
@@ -232,6 +286,19 @@ class Queen:
                 return False
         return True
     
+    def check(self, board):
+        for row in range(7):
+            if self.validMove(row, self.col, board):
+                piece = board[row][self.col]
+                if isinstance(piece, King) and piece.color != self.color:
+                    return True
+        for col in range(7):
+            if self.validMove(self.row, col, board):
+                piece = board[self.row][col]
+                if isinstance(piece, King) and piece.color != self.color:
+                    return True
+        return False
+    
 #-----graphics-----#
 
 def onAppStart(app):
@@ -249,6 +316,7 @@ def reset(app):
     app.message = None
     app.pawnPromotion = None
     app.instructions = False
+    app.gameOver = False
     #white pawns
     app.pawnw1 = Pawn("white", 6, 0, 0)
     app.pawnw2 = Pawn("white", 6, 1, 0)
@@ -302,7 +370,7 @@ def reset(app):
 def onKeyPress(app, key):
     if key == "p":
         reset(app)
-    if key != "p" or "c":
+    elif key == "c" and not app.gameOver:
         app.pawnPromotion = key
 
 def onMousePress(app, mouseX, mouseY):
@@ -313,16 +381,17 @@ def onMousePress(app, mouseX, mouseY):
     if 410 <= mouseX <= 490 and 10 <= mouseY <= 40:
         app.instructions = not app.instructions
     #determine if click was the beginning or end of a move
-    elif app.beginMove == None:
-        app.beginMove = [row, col]
-        app.message = None
-    elif app.beginMove == [row, col]:
-        app.beginMove = None
-        app.endMove = None
-        app.message = None
-    else: 
-        app.endMove = [row, col]
-        makeMove(app)
+    if not app.gameOver:
+        if app.beginMove == None:
+            app.beginMove = [row, col]
+            app.message = None
+        elif app.beginMove == [row, col]:
+            app.beginMove = None
+            app.endMove = None
+            app.message = None
+        else: 
+            app.endMove = [row, col]
+            makeMove(app)
     
 def makeMove(app):
     #find piece and potential captured piece
@@ -345,6 +414,14 @@ def makeMove(app):
         app.endMove = None
         if isinstance(piece, Pawn) and piece.validPawnPromotion():
             pawnPromotion(app, piece)
+        good = isinstance(piece, Pawn) or isinstance(piece, King) or isinstance(piece, Rook) or isinstance(piece, Knight)
+        if good and piece.check(app.board):
+            app.message = "Check!"
+        '''
+        if piece.checkmate(app.board):
+            app.message = "Checkmate! Game over."
+            app.gameOver = True
+        '''
         if piece.color == "white":
             app.currentPlayer = "Black"
         else:
