@@ -15,9 +15,6 @@ class Pawn:
             self.image = "chess pieces/black pawn.png"
 
     def validMove(self, newRow, newCol, board):
-        if self.col != newCol:
-            print("horizontal")
-            return False
         if self.turn == 0:
             if self.color == "white" and (self.row - 1 == newRow or self.row - 2 == newRow):
                 self.turn += 1
@@ -26,11 +23,35 @@ class Pawn:
                 self.turn += 1
                 return True
         if self.color == "white":
-            return self.row - 1 == newRow
-        if self.color == "black":
-            return self.row + 1 == newRow
+            return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
+        else:
+            return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
         return False
     
+    def validMoveForward(self, newRow, newCol, board):
+        if self.color == "white":
+            return self.row - 1 == newRow and board[newRow][newCol] == "-"
+        else:
+            return self.row + 1 == newRow and board[newRow][newCol] == "-"
+    
+    def validCapture(self, newRow, newCol, board):
+        dRow = abs(newRow - self.row)
+        dCol = abs(newCol - self.col)
+        capturedPiece = board[newRow][newCol]
+        if self.color == "white":
+            return (dRow == dCol == 1 and newRow < self.row and capturedPiece != "-")
+        else:
+            return (dRow == dCol == 1 and newRow > self.row and capturedPiece != "-")
+    
+    def validEnPassant(self, newRow, newCol, board):
+        pass
+    
+    def validPawnPromotion(self):
+        if self.color == "white":
+            return self.row == 0
+        else:
+            return self.row == 7
+
 #rook class, checks if piece moved in a line
 class Rook:
     def __init__(self, color, row, col):
@@ -167,9 +188,9 @@ class Queen:
             return self.noObstaclesLine(newRow, newCol, board)
         if self.row != newRow and self.col == newCol:
             return self.noObstaclesLine(newRow, newCol, board)
-        drow = abs(newRow - self.row)
-        dcol = abs(newCol - self.col)
-        if drow == dcol: 
+        dRow = abs(newRow - self.row)
+        dCol = abs(newCol - self.col)
+        if dRow == dCol: 
             return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
     
@@ -226,6 +247,8 @@ def reset(app):
     app.beginMove = None
     app.endMove = None
     app.message = None
+    app.pawnPromotion = None
+    app.instructions = False
     #white pawns
     app.pawnw1 = Pawn("white", 6, 0, 0)
     app.pawnw2 = Pawn("white", 6, 1, 0)
@@ -277,15 +300,20 @@ def reset(app):
 
 #reset game if "r" is pressed
 def onKeyPress(app, key):
-    if key == "r":
+    if key == "p":
         reset(app)
+    if key != "p" or "c":
+        app.pawnPromotion = key
 
 def onMousePress(app, mouseX, mouseY):
     #find location
     row = (mouseY - 50)//50
     col = (mouseX - 50)//50
+    #show instructions screen
+    if 410 <= mouseX <= 490 and 10 <= mouseY <= 40:
+        app.instructions = not app.instructions
     #determine if click was the beginning or end of a move
-    if app.beginMove == None:
+    elif app.beginMove == None:
         app.beginMove = [row, col]
         app.message = None
     elif app.beginMove == [row, col]:
@@ -308,14 +336,15 @@ def makeMove(app):
         print("same color")
         app.message = "Invalid Move!"
     elif piece != "-" and valid: #valid move
-        print("valid move")
-        app.message = ""
+        app.message = None
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
         app.board[app.endMove[0]][app.endMove[1]] = piece
         app.beginMove = None
         app.endMove = None
+        if isinstance(piece, Pawn) and piece.validPawnPromotion():
+            pawnPromotion(app, piece)
         if piece.color == "white":
             app.currentPlayer = "Black"
         else:
@@ -323,6 +352,25 @@ def makeMove(app):
     elif not valid: #invalid move
         print("not valid move")
         app.message = "Invalid Move!"
+
+def pawnPromotion(app, piece):
+    row = piece.row
+    col = piece.col
+    color = piece.color
+    if app.pawnPromotion == "r":
+        app.pawnPromotion = None
+        app.board[row][col] = Rook(color, row, col)
+    elif app.pawnPromotion == "k":
+        app.pawnPromotion = None
+        app.board[row][col] = Knight(color, row, col)
+    elif app.pawnPromotion == "b":
+        app.pawnPromotion = None
+        app.board[row][col] = Bishop(color, row, col)
+    elif app.pawnPromotion == "q":
+        app.pawnPromotion = None
+        app.board[row][col] = Queen(color, row, col)
+    else:
+        app.message = "Invalid Pawn Promotion!"
 
 #draw the board
 def drawBoard(app):
@@ -358,13 +406,26 @@ def drawPieces(app):
             if piece != "-":
                 drawImage(piece.image, 50 + cellSize*col, 50 + cellSize*row, width = cellSize, height = cellSize)
 
+#draw instructions screen
+def drawInstructions(app):
+    drawLabel("Instructions: ", 250, 25, size = 20, align = "center")
+
+#draw instructions box
+def drawInstructionBox(app):
+    drawRect(450, 25, 80, 30, fill = "green", align = "center")
+    drawLabel("Instructions", 450, 25, align = "center")
+
 def redrawAll(app):
-    #draw board, pieces, and text
-    drawBoard(app)
-    drawPieces(app)
-    if app.message != None:
-        drawLabel(app.message, 250, 475, fill = "red", size = 20)
-    drawLabel("Current Player: " + app.currentPlayer, 250, 25, size = 20)
+    drawInstructionBox(app)
+    if app.instructions:
+        drawInstructions(app)
+    else:
+        #draw board, pieces, and text
+        drawBoard(app)
+        drawPieces(app)
+        if app.message != None:
+            drawLabel(app.message, 250, 475, fill = "red", size = 20)
+        drawLabel("Current Player: " + app.currentPlayer, 250, 25, size = 20)
 
 def main():
     runApp()
