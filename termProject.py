@@ -22,7 +22,7 @@ class Pawn:
             if self.color == "black" and (self.row + 1 == newRow or self.row + 2 == newRow):
                 self.turn += 1
                 return True
-        if self.color == "white":
+        elif self.color == "white":
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
         else:
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
@@ -58,9 +58,10 @@ class Pawn:
         else:
             dRow = 1
         for dCol in [-1, 1]:
-            capturedPiece = board[self.row + dRow][self.col + dCol]
-            if isinstance(capturedPiece, King) and self.validCapture(self.row + dRow, self.col + dCol, board):
-                return True
+            if 0 <= dCol <= 7:
+                capturedPiece = board[self.row + dRow][self.col + dCol]
+                if isinstance(capturedPiece, King) and self.validCapture(self.row + dRow, self.col + dCol, board):
+                    return True
         return False
 
 #rook class, checks if piece moved in a line
@@ -106,12 +107,12 @@ class Rook:
         return True
     
     def check(self, board):
-        for row in range(7):
+        for row in range(8):
             if self.validMove(row, self.col, board):
                 piece = board[row][self.col]
                 if isinstance(piece, King) and piece.color != self.color:
                     return True
-        for col in range(7):
+        for col in range(8):
             if self.validMove(self.row, col, board):
                 piece = board[self.row][col]
                 if isinstance(piece, King) and piece.color != self.color:
@@ -189,13 +190,18 @@ class Bishop:
         else:
             dCol = 1
         for dif in range(1, abs(newRow - self.row)):
-            print(self.row + dRow * dif, self.col + dCol * dif)
             if board[self.row + dRow * dif][self.col + dCol * dif] != "-":
                 return False
         return True
     
     def check(self, board):
-        pass
+        for row in range(8):
+            for col in range(8):
+                if self.validMove(row, col, board):
+                    piece = board[row][col]
+                    if isinstance(piece, King) and piece.color != self.color:
+                        return True
+        return False
 
 #king class, checks if piece moved one square
 class King:
@@ -213,17 +219,52 @@ class King:
         for drow in [-1, 0, 1]:
             for dcol in [-1, 0, 1]:
                 if (drow, dcol) != (0, 0):
-                    if self.row + drow == newRow and self.col + dcol == newCol:
-                        return True
+                    row = self.row + drow
+                    col = self.col + dcol
+                    if 0 <= row <= 7 and 0 <= col <= 7:
+                        piece = board[self.row + drow][self.col + dcol]
+                        if self.row + drow == newRow and self.col + dcol == newCol:
+                            if piece == "-" or piece != "-" and piece.color != self.color:
+                                return True
         return False
     
     def check(self, board):
-        for row in range(7):
-            for col in range(7):
+        for row in range(8):
+            for col in range(8):
                 piece = board[row][col]
                 if piece != "-" and piece.color != self.color and piece.validMove(self.row, self.col, board):
+                    print(piece)
                     return True
         return False
+    
+    def checkmate(self, board):
+        validMoves = []
+        for dRow in [-1, 0, 1]:
+            for dCol in [-1, 0, 1]:
+                newRow = self.row + dRow
+                newCol = self.col + dCol
+                print(newRow, newCol)
+                if 0 <= newRow <= 7 and 0 <= newCol <= 7:
+                    piece = board[newRow][newCol]
+                    if piece == "-" or piece.color != self.color:
+                        print("valid square")
+                        validMoves.append((newRow, newCol))
+        if validMoves == []:
+            return False
+        print(validMoves)
+        for newRow, newCol in validMoves:
+            oldRow = self.row
+            oldCol = self.col
+            self.row = newRow
+            self.col = newCol
+            if self.check(board) == False:
+                self.row = oldRow
+                self.col = oldCol
+                return False
+        self.row = oldRow
+        self.col = oldCol
+        print("done")
+        return True
 
 #queen class, checks if piece moved in a line or diagonally
 class Queen:
@@ -245,6 +286,7 @@ class Queen:
         dRow = abs(newRow - self.row)
         dCol = abs(newCol - self.col)
         if dRow == dCol: 
+            print(dRow, dCol, self.row, self.col)
             return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
     
@@ -281,22 +323,30 @@ class Queen:
         else:
             dCol = 1
         for dif in range(1, abs(newRow - self.row)):
-            print(self.row + dRow * dif, self.col + dCol * dif)
             if board[self.row + dRow * dif][self.col + dCol * dif] != "-":
                 return False
         return True
     
     def check(self, board):
-        for row in range(7):
+        #if there is a check vertically
+        for row in range(8):
             if self.validMove(row, self.col, board):
                 piece = board[row][self.col]
                 if isinstance(piece, King) and piece.color != self.color:
                     return True
-        for col in range(7):
+        #if there is a check horizontally
+        for col in range(8):
             if self.validMove(self.row, col, board):
                 piece = board[self.row][col]
                 if isinstance(piece, King) and piece.color != self.color:
                     return True
+        #if there is a check diagonally
+        for row in range(8):
+            for col in range(8):
+                if self.validMove(row, col, board):
+                    piece = board[row][col]
+                    if isinstance(piece, King) and piece.color != self.color:
+                        return True
         return False
     
 #-----graphics-----#
@@ -397,15 +447,17 @@ def makeMove(app):
     #find piece and potential captured piece
     piece = app.board[app.beginMove[0]][app.beginMove[1]]
     capturePiece = app.board[app.endMove[0]][app.endMove[1]]
-    valid = piece.validMove(app.endMove[0], app.endMove[1], app.board)
     #make move if valid
-    if piece.color != app.currentPlayer.lower(): #wrong player
+    if piece == "-":
+        app.message = "Select a piece to move."
+    elif piece.color != app.currentPlayer.lower(): #wrong player
         app.message = "Wrong Player Move!"
     elif capturePiece != "-" and (piece.color == capturePiece.color): #same color pieces
         print("same color")
         app.message = "Invalid Move!"
-    elif piece != "-" and valid: #valid move
-        app.message = None
+    elif piece != "-" and piece.validMove(app.endMove[0], app.endMove[1], app.board): #valid move
+        if app.message != "Check!":
+            app.message = None
         piece.row = app.endMove[0]
         piece.col = app.endMove[1]
         app.board[app.beginMove[0]][app.beginMove[1]] = "-"
@@ -414,19 +466,19 @@ def makeMove(app):
         app.endMove = None
         if isinstance(piece, Pawn) and piece.validPawnPromotion():
             pawnPromotion(app, piece)
-        good = isinstance(piece, Pawn) or isinstance(piece, King) or isinstance(piece, Rook) or isinstance(piece, Knight)
-        if good and piece.check(app.board):
+        if piece.check(app.board):
             app.message = "Check!"
-        '''
-        if piece.checkmate(app.board):
-            app.message = "Checkmate! Game over."
-            app.gameOver = True
-        '''
+            whiteCheckMate = app.kingw.checkmate(app.board)
+            blackCheckMate = app.kingb.checkmate(app.board)
+            print(whiteCheckMate, blackCheckMate)
+            if whiteCheckMate or blackCheckMate:
+                app.message = "Checkmate! Game over."
+                app.gameOver = True
         if piece.color == "white":
             app.currentPlayer = "Black"
         else:
             app.currentPlayer = "White"
-    elif not valid: #invalid move
+    else: #invalid move
         print("not valid move")
         app.message = "Invalid Move!"
 
