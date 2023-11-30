@@ -8,6 +8,7 @@ class Pawn:
         self.row = row
         self.col = col
         self.turn = turn
+        self.enPassant = False
         #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
         if color == "white":
             self.image = "chess pieces/white pawn.png"
@@ -16,13 +17,18 @@ class Pawn:
 
     def validMove(self, newRow, newCol, board):
         if self.turn == 0:
-            if self.color == "white" and (self.row - 1 == newRow or self.row - 2 == newRow):
+            if self.color == "white" and (self.row - 1 == newRow or self.row - 2 == newRow) and self.col == newCol:
                 self.turn += 1
+                if self.row - 2 == newRow:
+                    self.turn += 1
                 return True
-            if self.color == "black" and (self.row + 1 == newRow or self.row + 2 == newRow):
+            if self.color == "black" and (self.row + 1 == newRow or self.row + 2 == newRow) and self.col == newCol:
                 self.turn += 1
+                if self.row + 2 == newRow:
+                    self.turn += 1
                 return True
         elif self.color == "white":
+            print(self.validMoveForward(newRow, newCol, board))
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
         else:
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
@@ -30,9 +36,9 @@ class Pawn:
     
     def validMoveForward(self, newRow, newCol, board):
         if self.color == "white":
-            return self.row - 1 == newRow and board[newRow][newCol] == "-"
+            return self.row - 1 == newRow and self.col == newCol and board[newRow][newCol] == "-"
         else:
-            return self.row + 1 == newRow and board[newRow][newCol] == "-"
+            return self.row + 1 == newRow and self.col == newCol and board[newRow][newCol] == "-"
     
     def validCapture(self, newRow, newCol, board):
         dRow = abs(newRow - self.row)
@@ -44,7 +50,14 @@ class Pawn:
             return (dRow == dCol == 1 and newRow > self.row and capturedPiece != "-")
     
     def validEnPassant(self, newRow, newCol, board):
-        pass
+        dRow = abs(newRow - self.row)
+        dCol = abs(newCol - self.col)
+        capturedPiece = board[newRow - 1][newCol]
+        if dRow == dCol == 1 and capturedPiece != "-" and capturedPiece.color != self.color:
+            if isinstance(capturedPiece, Pawn) and capturedPiece.turn == 2:
+                capturedPiece.enPassant = True
+                return True
+        return False
     
     def validPawnPromotion(self):
         if self.color == "white":
@@ -70,6 +83,7 @@ class Rook:
         self.color = color
         self.row = row
         self.col = col
+        self.turn = 0
         #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
         if color == "white":
             self.image = "chess pieces/white rook.png"
@@ -104,6 +118,7 @@ class Rook:
             for row in range(lower, upper):
                 if board[row][self.col] != "-":
                     return False
+        self.turn += 1
         return True
     
     def check(self, board):
@@ -209,6 +224,7 @@ class King:
         self.color = color
         self.row = row
         self.col = col
+        self.turn = 0
         #image source: https://clipart-library.com/clip-art/chess-pieces-silhouette-14.htm
         if color == "white":
             self.image = "chess pieces/white king.png"
@@ -225,6 +241,7 @@ class King:
                         piece = board[self.row + drow][self.col + dcol]
                         if self.row + drow == newRow and self.col + dcol == newCol:
                             if piece == "-" or piece != "-" and piece.color != self.color:
+                                self.turn += 1
                                 return True
         return False
     
@@ -233,7 +250,6 @@ class King:
             for col in range(8):
                 piece = board[row][col]
                 if piece != "-" and piece.color != self.color and piece.validMove(self.row, self.col, board):
-                    print(piece)
                     return True
         return False
     
@@ -243,15 +259,12 @@ class King:
             for dCol in [-1, 0, 1]:
                 newRow = self.row + dRow
                 newCol = self.col + dCol
-                print(newRow, newCol)
                 if 0 <= newRow <= 7 and 0 <= newCol <= 7:
                     piece = board[newRow][newCol]
                     if piece == "-" or piece.color != self.color:
-                        print("valid square")
                         validMoves.append((newRow, newCol))
         if validMoves == []:
             return False
-        print(validMoves)
         for newRow, newCol in validMoves:
             oldRow = self.row
             oldCol = self.col
@@ -263,7 +276,6 @@ class King:
                 return False
         self.row = oldRow
         self.col = oldCol
-        print("done")
         return True
 
 #queen class, checks if piece moved in a line or diagonally
@@ -286,7 +298,6 @@ class Queen:
         dRow = abs(newRow - self.row)
         dCol = abs(newCol - self.col)
         if dRow == dCol: 
-            print(dRow, dCol, self.row, self.col)
             return self.noObstaclesDiagonal(newRow, newCol, board)
         return False
     
@@ -367,6 +378,7 @@ def reset(app):
     app.pawnPromotion = None
     app.instructions = False
     app.gameOver = False
+    app.check = False
     #white pawns
     app.pawnw1 = Pawn("white", 6, 0, 0)
     app.pawnw2 = Pawn("white", 6, 1, 0)
@@ -420,7 +432,11 @@ def reset(app):
 def onKeyPress(app, key):
     if key == "p":
         reset(app)
-    elif key == "c" and not app.gameOver:
+    elif key == "c":
+        castleQueenSide(app)
+    elif key == "d":
+        castleKingSide(app)
+    elif not app.gameOver:
         app.pawnPromotion = key
 
 def onMousePress(app, mouseX, mouseY):
@@ -431,17 +447,18 @@ def onMousePress(app, mouseX, mouseY):
     if 410 <= mouseX <= 490 and 10 <= mouseY <= 40:
         app.instructions = not app.instructions
     #determine if click was the beginning or end of a move
-    if not app.gameOver:
-        if app.beginMove == None:
-            app.beginMove = [row, col]
-            app.message = None
-        elif app.beginMove == [row, col]:
-            app.beginMove = None
-            app.endMove = None
-            app.message = None
-        else: 
-            app.endMove = [row, col]
-            makeMove(app)
+    if 50 <= mouseX <= 450 and 50 <= mouseY <= 450:
+        if not app.gameOver:
+            if app.beginMove == None:
+                app.beginMove = [row, col]
+                app.message = None
+            elif app.beginMove == [row, col]:
+                app.beginMove = None
+                app.endMove = None
+                app.message = None
+            else: 
+                app.endMove = [row, col]
+                makeMove(app)
     
 def makeMove(app):
     #find piece and potential captured piece
@@ -464,10 +481,14 @@ def makeMove(app):
         app.board[app.endMove[0]][app.endMove[1]] = piece
         app.beginMove = None
         app.endMove = None
+        app.check = False
         if isinstance(piece, Pawn) and piece.validPawnPromotion():
             pawnPromotion(app, piece)
+        if isinstance(piece, Pawn):
+            enPassant(app)
         if piece.check(app.board):
             app.message = "Check!"
+            app.check = True
             whiteCheckMate = app.kingw.checkmate(app.board)
             blackCheckMate = app.kingb.checkmate(app.board)
             print(whiteCheckMate, blackCheckMate)
@@ -500,6 +521,89 @@ def pawnPromotion(app, piece):
         app.board[row][col] = Queen(color, row, col)
     else:
         app.message = "Invalid Pawn Promotion!"
+
+def enPassant(app):
+    for row in range(8):
+        for col in range(8):
+            piece = app.board[row][col]
+            if piece != "-" and isinstance(piece, Pawn) and piece.enPassant:
+                app.board[row][col] = "-"
+
+def castleKingSide(app):
+    if not app.check:
+        app.message = ""
+        if app.currentPlayer == "White":
+            if app.board[7][7] == app.rookw2 and app.board[7][4] == app.kingw and app.rookw2.turn == 0 and app.kingw.turn == 0:
+                if app.board[7][5] == app.board[7][6] == "-":
+                    app.board[7][6] = app.kingw
+                    app.board[7][5] = app.rookw2
+                    app.board[7][7] = "-"
+                    app.board[7][4] = "-"
+                    app.kingw.col = 6
+                    app.rookw2.col = 5
+                    app.kingw.turn += 1
+                    app.rookw2.turn += 1
+                    app.currentPlayer = "Black"
+                else:
+                    app.message = "Invalid Castle!"
+            else:
+                app.message = "Invalid Castle!"
+        elif app.currentPlayer == "Black":
+            if app.board[0][7] == app.rookb2 and app.board[0][4] == app.kingb and app.rookb2.turn == 0 and app.kingb.turn == 0:
+                if app.board[0][5] == app.board[0][6] == "-":
+                    app.board[0][6] = app.kingb
+                    app.board[0][5] = app.rookb2
+                    app.board[0][7] = "-"
+                    app.board[0][4] = "-"
+                    app.kingb.col = 6
+                    app.rookb2.col = 5
+                    app.kingb.turn += 1
+                    app.rookb2.turn += 1
+                    app.currentPlayer = "White"
+                else:
+                    app.message = "Invalid Castle!"
+            else:
+                app.message = "Invalid Castle!"
+    else:
+        app.message = "Invalid Castle!"
+
+def castleQueenSide(app):
+    if not app.check:
+        app.message = ""
+        if app.currentPlayer == "White":
+            if app.board[7][0] == app.rookw1 and app.board[7][4] == app.kingw and app.rookw1.turn == 0 and app.kingw.turn == 0:
+                if app.board[7][1] == app.board[7][2] == app.board[7][3]== "-":
+                    app.board[7][2] = app.kingw
+                    app.board[7][3] = app.rookw1
+                    app.board[7][0] = "-"
+                    app.board[7][4] = "-"
+                    app.kingw.col = 2
+                    app.rookw1.col = 3
+                    app.kingw.turn += 1
+                    app.rookw1.turn += 1
+                    app.currentPlayer = "Black"
+                else:
+                    app.message = "Invalid Castle!"
+            else:
+                app.message = "Invalid Castle!"
+        elif app.currentPlayer == "Black":
+            if app.board[0][0] == app.rookb1 and app.board[0][4] == app.kingb and app.rookb1.turn == 0 and app.kingb.turn == 0:
+                if app.board[0][1] == app.board[0][2] == app.board[0][3] == "-":
+                    app.board[0][2] = app.kingb
+                    app.board[0][3] = app.rookb1
+                    app.board[0][0] = "-"
+                    app.board[0][4] = "-"
+                    app.kingb.col = 2
+                    app.rookb1.col = 3
+                    app.kingb.turn += 1
+                    app.rookb1.turn += 1
+                    app.currentPlayer = "White"
+                else:
+                    app.message = "Invalid Castle!"
+            else:
+                app.message = "Invalid Castle!"
+    else:
+        app.message = "Invalid Castle!"
 
 #draw the board
 def drawBoard(app):
