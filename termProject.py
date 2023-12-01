@@ -32,10 +32,8 @@ class Pawn:
                 return True
         #after the first turn    
         elif self.color == "white":
-            print(self.validMoveForward(newRow, newCol, board), self.validCapture(newRow, newCol, board), self.validEnPassant(newRow, newCol, board))
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
         else:
-            print(self.validMoveForward(newRow, newCol, board), self.validCapture(newRow, newCol, board), self.validEnPassant(newRow, newCol, board))
             return self.validMoveForward(newRow, newCol, board) or self.validCapture(newRow, newCol, board) or self.validEnPassant(newRow, newCol, board)
         return False
     
@@ -273,9 +271,11 @@ class King:
             for col in range(8):
                 piece = board[row][col]
                 if piece != "-" and piece.color != self.color and not isinstance(piece, Pawn):
-                    return piece.validMove(self.row, self.col, board)
+                    if piece.validMove(self.row, self.col, board):
+                        return True
                 elif piece != "-" and piece.color != self.color and isinstance(piece, Pawn):
-                    return piece.validCapture(self.row, self.col, board)
+                    if piece.validCapture(self.row, self.col, board):
+                        return True
         return False
     
     #if king is checkmated
@@ -519,6 +519,7 @@ def makeMove(app):
             app.check = True
             whiteCheckMate = app.kingw.checkmate(app.board)
             blackCheckMate = app.kingb.checkmate(app.board)
+            print(whiteCheckMate, blackCheckMate)
             if whiteCheckMate or blackCheckMate:
                 app.message = "Checkmate! Game over."
                 app.gameOver = True
