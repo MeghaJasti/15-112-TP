@@ -678,10 +678,22 @@ def drawPieces(app):
 #draw instructions screen
 def drawInstructions(app):
     drawLabel("Instructions: ", 250, 25, size = 20, align = "center")
+    drawLabel("To move pieces: select the piece to move and the square to move to.", 250, 55, size = 14, align = "center")
+    drawLabel("Capturing pieces will automatically happen.", 250, 75, size = 14, align = "center")
+    drawLabel("To castle (queen's side): press 'c'.", 250, 95, size = 14, align = "center")
+    drawLabel("To castle (king's side): press 'd'.", 250, 115, size = 14, align = "center")
+    drawLabel("Pawn Promotion: press the corresponding key and move the pawn.", 250, 135, size = 14, align = "center")
+    drawLabel("Rook - 'r'", 250, 155, size = 12, align = "center")
+    drawLabel("Knight - 'k'", 250, 175, size = 12, align = "center")
+    drawLabel("Bishop - 'b'", 250, 195, size = 12, align = "center")
+    drawLabel("Queen - 'q'", 250, 215, size = 12, align = "center")
+    drawLabel("En passant is valid.", 250, 235, size = 14, align = "center")
+    drawLabel("To reset the game: press 'p'", 250, 255, size = 14, align = "center")
+    drawLabel("No moves can be made after checkmate.", 250, 275, size = 14, align = "center")
 
 #draw instructions box
 def drawInstructionBox(app):
-    drawRect(450, 25, 80, 30, fill = "green", align = "center")
+    drawRect(450, 25, 80, 30, fill = "green", align = "center", border = "black", borderWidth = 2)
     drawLabel("Instructions", 450, 25, align = "center")
 
 def redrawAll(app):
