@@ -519,7 +519,6 @@ def makeMove(app):
             app.check = True
             whiteCheckMate = app.kingw.checkmate(app.board)
             blackCheckMate = app.kingb.checkmate(app.board)
-            print(whiteCheckMate, blackCheckMate)
             if whiteCheckMate or blackCheckMate:
                 app.message = "Checkmate! Game over."
                 app.gameOver = True
@@ -686,7 +685,7 @@ def drawInstructions(app):
     drawLabel("Rook - 'r'", 250, 155, size = 12, align = "center")
     drawLabel("Knight - 'k'", 250, 175, size = 12, align = "center")
     drawLabel("Bishop - 'b'", 250, 195, size = 12, align = "center")
-    drawLabel("Queen - 'q'", 250, 215, size = 12, align = "center")
+    drawLabel("Queen - 'q'.", 250, 215, size = 12, align = "center")
     drawLabel("En passant is valid.", 250, 235, size = 14, align = "center")
     drawLabel("To reset the game: press 'p'", 250, 255, size = 14, align = "center")
     drawLabel("No moves can be made after checkmate.", 250, 275, size = 14, align = "center")
